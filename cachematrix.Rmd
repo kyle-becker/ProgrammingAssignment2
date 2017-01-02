@@ -1,0 +1,77 @@
+---
+title: "CacheMatrix Assignment"
+author: "Kyle Becker"
+date: "January 1, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This second programming assignment will require you to write an R function that is able to cache potentially time-consuming computations. For example, taking the mean of a numeric vector is typically a fast operation. However, for a very long vector, it may take too long to compute the mean, especially if it has to be computed repeatedly (e.g. in a loop). If the contents of a vector are not changing, it may make sense to cache the value of the mean so that when we need it again, it can be looked up in the cache rather than recomputed. In this Programming Assignment you will take advantage of the scoping rules of the R language and how they can be manipulated to preserve state inside of an R object.
+
+##Example: Caching the Inverse of a Matrix
+
+In this example we introduce the <<- operator which can be used to assign a value to an object in an environment that is different from the current environment. Below are two functions that are used to create a special object that stores a matrix and caches its inverse.
+
+The first function, MakeCasheMatrix creates a special "matrix", which is really a list containing a function to
+
+- set the value of the matrix
+- get the value of the matrix
+- set the value of the inverse
+- get the value of the inverse
+
+```{r}
+makeCacheMatrix <- function(x = matrix()) { # Create a function makeCacheMatrix that accepts a square matrix as an argument
+  I <- NULL  # initialize I in the function's env; set to NULL
+  
+  
+ 
+  set <- function(y) {#Create set() closure to:
+    x <<- y  #Set x (in makeCacheMatrix()'s environment)
+    I <<- NULL  ##   - clear m (also in makeCacheMatrix() environment)
+  }
+  
+  
+  get <- function(){ x } #Store matrix given as an argument in the get function
+  
+  setInverse <- function(Inverse){ I <<- Inverse } #Set inverse cache (I) (in makeCacheMatrix() environment) to Inverse parameter
+  
+  getInverse <- function(){ I } #Get inverse cache (I) from makeCacheMatrix() environment
+  
+  list(set = set, get = get, #Store each functions result in a list
+       setInverse = setInverse,
+       getInverse = getInverse)
+}
+```
+
+The following function calculates the mean of the special "matrix" created with the above function. However, it first checks to see if the inverse has already been calculated. If so, it gets the inverse from the cache and skips the computation. Otherwise, it calculates the inverse of the data and sets the value of the inverse in the cache via the SetInverse function.
+
+``` {r}
+cacheSolve <- function(x, ...) {
+I <- x$getInverse() # look in the list to see if the inverse has been cached
+  if(!is.null(I)) { #If getInverse is not null then
+    message("getting cached data") #print the message getting cached data
+    return(I) #return the value stored in getInverse
+  }
+  data <- x$get() #If get inverse is null then get the matrix from the list stored in get
+  I <- solve(data, ...) # calculated the inverse of the matrix using the solve function
+  x$setInverse(I) #store the inverse in Set Inverse 
+  I # Return the inverse to the console 
+}
+```
+
+##Summary
+The above function takes an argument of type special matrix and checks to see if the inverse has been cached. If the inverse has been stored it prints the message getting cached data to the console and then returns the inverse stored in the getInverse function. If the getInverse function is not stored the function gets the matrix using the get function and calculates it using the solve function. Once it has been calculated the results are stored in SetInverse and the results are returned to the console.
+
+##Example
+
+``` {r}
+Matrix <- makeCacheMatrix(matrix(1:6,2,2))
+cacheSolve(Matrix)
+``` 
+
+cacheSolve(Matrix)
